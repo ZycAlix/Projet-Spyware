@@ -156,6 +156,7 @@ If you want to see all of transforms disponbible, we provide 2 solutions:
   ```
     python projects/data_augmentation/run_processors.py
   ```
+  ![Transform illustration](./transform_illustration.png)
   - Or look at these two lien for more informations: [Augly_transforme](https://github.com/facebookresearch/AugLy) and [Torch_transforme](https://pytorch.org/vision/stable/transforms.html)
   
 For going far, we have provided a notebook for dataset custom, dataset exterieur, etc. 

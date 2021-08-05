@@ -1,4 +1,3 @@
-
 # generic-AI-framework (GAIF)
 
 [MMF](https://github.com/facebookresearch/mmf)
@@ -80,29 +79,29 @@ run(opts=opts)
 ```
 
 # Datasets
-The job of datasets in our Framework GAIF is taking and sauvegarding all of informations in each dataset and then apply (or not) the different method <Data Augmentation> on them to have a dataset more robuste. Au finale, we could using these data by type and have a visualisation more clearly. 
+Inside our GAIF framework, the dataset part is mainly loaded with various types of data, such as COCO, Yolo, etc., to facilitate the extraction of needed information and tags. And GAIF provides different methods of **Data Augmentation** to make the dataset more complete. Of course, we also provide the function of visualizing the dataset samples to facilitate a more intuitive understanding of this type of data.
 
-The Gaif Framework has installed these datasets below for testing:
+A number of datasets have been installed for testing and experience with the GAIF framework, as listed below:
 | Name_Dataset | Type | THEME | Key_Word_Registry | Download | Description |
 | ---- | --- | ---- | --- | ---- | ---- |
 | [**YahooAnswers**](https://paperswithcode.com/sota/text-classification-on-yahoo-answers) | TEXT | Classification | classification_yahooanswers | :heavy_check_mark: | A dataset with Question and Answers in 10 Types Topic |
 | [**IMDB**](https://paperswithcode.com/dataset/imdb-movie-reviews) | TEXT | Classification | classification_imdb | :heavy_check_mark: | A dataset with critics positive and negative for movies | 
-| [**Balloon**](https://github.com/matterport/Mask_RCNN) | IMAGE | Detection | classification_balloon | :heavy_check_mark: | A dataset of photos with a lot of balloon to find out |
-| [**Poc_mons**](/Poc_mons.md) | IMAGE | Detection | classification_poc_mons | :x: | A dataset prive of photos in Mons to look for mans and vehicules |
+| [**Balloon**](https://github.com/matterport/Mask_RCNN) | IMAGE | Detection | detection_balloon | :heavy_check_mark: | A dataset of photos with a lot of balloon to find out |
+| [**Poc_mons**](./doc/Poc_mons.md) | IMAGE | Detection | detection_poc_mons | :x: | A dataset prive of photos in Mons to look for mans and vehicules |
 | [**Cifar10**](https://paperswithcode.com/dataset/cifar-10) | IMAGE | Classification | classification_cifar10 | :heavy_check_mark: | A dataset with 10 differents category objects |
 | [**Omniglot**](https://paperswithcode.com/dataset/omniglot-1) | IMAGE | Classification | classification_omniglot | :heavy_check_mark: | A dataset of hand-written characters with 1623 characters and 20 examples for each character |
 | [**Gtzan**](https://paperswithcode.com/dataset/gtzan) | Audio | Classification | classification_gtzan | :heavy_check_mark: | A dataset in Musical genre classification of audio signals |
 
-Besides these datasets, we could also take a look of datasets in MMF, Torchvision, TorchText and Torchaudio. Obviously, MMF is the principal API that we use in our framework, we could simply use the dataset's Key_Word registed by MMF and start to build a modele custom or directly a modele of MMF. On the contrary, we need necessaily to have 3 file: Builder, Dataset and Config correpondant. 
+In addition to the above datasets, we can also find the required datasets from MMF, Torchvision, Torchtext and Torchaudio. MMF, as the main API of our framework, we have all the datasets recorded in the registry and just need to load the key_word of this required dataset by a simple script. word can be run. For the other three APIs, including custom datasets need to create a special Builder and Dataset, and create a key_word of it saved to the registry inside. Of course, all datasets require the configuration file .yaml to provide the required parameters. There will be specific examples in the Usage Section.
 
 ## Usage
-Before look at this section <strong>Usage</strong>, we should know that all of datasets except MMF should be registed in our Framework Gaif. To realize that, we should add a commande for each class of builder, for example:
+As mentioned in the previous section, all datasets except MMF need to create a key_word and save it in the registry of GAIF framework. For example:
 ```
 @registry.register_builder("classification_yahooanswers")
 class YAHOOANSWERSBuilder(BaseDatasetBuilder): 
 ....
 ```
-Then, Gaif will know the key_word *classification_yahooanswers* correspond to which class and the function *config_path* will tell Gaif where could find your file config.yaml for your parameters like that:
+Then, the GAIF framework will know that this key_word *classification_yahooanswers* is the class of the corresponding dataset and thus create the relevant object. Also, there is a function *config_path* (custom) in the Builder, which will provide the location of the dataset configuration file.yaml, so that GAIF can find the relevant parameters. Something like this:
 ``` 
 @classmethod
     def config_path(cls):
@@ -110,7 +109,7 @@ Then, Gaif will know the key_word *classification_yahooanswers* correspond to wh
 ```
 
 ### MMF
-  For MMF, it provides a few datasets disponible and registed in our Framework GAIF. We give an example here:
+  For MMF, it provides a number of datasets that can be used directly, including automatically downloaded data, and are registed in the GAIF framework. We give an example here:
   ```
     from mmf.utils.build import build_dataset
     from gaif.utils.env import setup_imports
@@ -123,10 +122,10 @@ Then, Gaif will know the key_word *classification_yahooanswers* correspond to wh
     print(dataset.__getitem__(6))
   
   ```
-  With a key_word of dataset, we could directly use the dataset of MMF without builder and dataset if this dataset is downloadable. For more informations, please look at this : [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
+  The samples of this dataset are obtained directly by calling MMF's Builder and Dataset with the key_word of the MMF dataset. For more informations, please look at this : [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
 
 ### Torchvision
-  For Torchvision, also Torchtext and Torchaudion, we could use directly their datasets given, but we should also creer two file Builder and Dataset for them. Here is an example: 
+  For the three sisters of the Torch series, we can use the datasets they generate directly, but we have to build Builders and Datasets for them separately, as described in the previous section. Here is an example: 
   ```
     ... in Builder:
     
@@ -158,11 +157,16 @@ Then, Gaif will know the key_word *classification_yahooanswers* correspond to wh
     .... 
     
   ```
-In this case, we have to add the Torchvision's dataset to our Framework, then we could apply our processors on these datasets. *Notice that*: the key_word has been used also in config.yaml for distinguishing.
+For example, in the example above, Torchvision provides a dataset class for Omniglot. We create the Builder, Dataset and profile.yaml for them separately.  *Notice*: The key_word in the configuration file and the key_word of the dataset should be consistent.
+
+Finally, we can arrange where the datasets are stored by changing the env.data_dir. Generally, the default is to store it in **".cache/torch/mmf/data"**.
+
 
 # Processors
 
-The processors are used in dataset for data augmentation and pre-prepare dataset. All of transforms in Augly, Torchvision, Torchtext, Torchaudio could be added by choosing their function's name to config file choosing thses three processors defined by GAIF: *augly_image_transforms*, *augly_audio_transforms*, *augly_text_transforms* . Here is an example: 
+Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. But there are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
+<p>With the GAIF framework's three custom processors: <strong>augly_image_transforms</strong>, <strong>augly_audio_transforms</strong>, <strong>augly_text_transforms</strong> , GAIF can add all transforms function of the augly and the torch series.
+<p>The processors will implement the required Data Augmentation by simply adding the name of the transforms and the required parameters to the config. Here is an example: 
 
   ```
     ... in .yaml
@@ -190,7 +194,7 @@ The processors are used in dataset for data augmentation and pre-prepare dataset
 
 
   ```
-If we want to have a specifique processor or to use processors at a different moment, we could also change a method to define processors. 
+Of course, in addition to Data Augmentation, we can also use some special processors, such as some of MMF's processors or custom processors, or use multiple processors at the same time.
 For example:
   ```
     ... in . yaml
@@ -230,18 +234,17 @@ For example:
 
 
   ```
-Also, MMF have proposed serveral processors in differents case, for more informations, please look at here: [MMF_Processors](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/processors)
+For more information about MMF's processors and their uses, please click here: [MMF_Processors](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/processors)
 
-If you want to see all of transforms disponbible, we provide 2 solutions:
-  - Use this commande to find out it:
+If you want to see all valid transforms, We offer two approaches:
+  - Use this custom commande to find out it:
   ```
     python projects/data_augmentation/run_processors.py
   ```
-  ![Transform illustration](./transform_illustration.png)
+  ![Transform illustration](./doc/transform_illustration.png)
   - Or look at these two lien for more informations: [Augly_transforme](https://github.com/facebookresearch/AugLy) and [Torch_transforme](https://pytorch.org/vision/stable/transforms.html)
   
-For going far, we have provided a notebook for dataset custom, dataset exterieur, etc. 
-If you want and need it, take a look at here: [Dataset_Detail](/Dataset_Example.ipynb)
+For those who wish to learn more about the dataset part of the GAIF framework or have unanswered questions, we have a notebook that shows the process of building a custom dataset from start to finish. Please look at here: [Dataset_Detail](/Dataset_Example.ipynb)
 
 
 ## Models and Backbones
@@ -293,8 +296,9 @@ Authors of MMF
 }
 ```
 
-``` 
-    @misc{bitton2021augly,
+Authors of Augly
+``` bibtex
+@misc{bitton2021augly,
     author       = {Joanna Bitton and Zoe Papakipos},
     title        = {AugLy: A data augmentations library for audio, image, text, and video.},
     year         = {2021},

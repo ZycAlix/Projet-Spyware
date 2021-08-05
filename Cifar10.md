@@ -6,6 +6,7 @@
 
 GAIF was tested with **Ubuntu 20.04** and python 3.8.10
 
+
 ## 2. Install
 
 ```sh
@@ -13,6 +14,34 @@ git clone https://github.com/nico-ri/generic-AI-framework
 cd generic-AI-framework
 pip install --editable .
 ```
+Here are Requirements for Installing:
+
+```text
+mmf @ git+https://github.com/facebookresearch/mmf@d37fffc
+torch==1.9.0
+torchvision== 0.10.0 
+torchaudio==0.9.0
+pytorch_lightning>=1.3.1
+torchinfo==0.1.1
+einops==0.3.0
+timm>=0.4.9
+efficientnet_pytorch==0.7.1
+tqdm>=4.43.0,<4.50.0
+numpy>=1.16.6
+opencv-python==4.2.0.32
+matplotlib==3.3.4
+wget==3.2
+scikit-learn==0.24.2
+Pillow>=8.2.0
+gdown==3.13.0
+lightly==1.1.15
+ranger21 @ git+https://github.com/lessw2020/Ranger21@57add4c
+augly==0.1.6 
+torchtext==0.5.0
+spacy==3.1.0
+
+```
+
 
 ## 3. How to use
 For training from scratch vgg16
@@ -92,17 +121,17 @@ A number of datasets have been installed for testing and experience with the GAI
 | [**Omniglot**](https://paperswithcode.com/dataset/omniglot-1) | IMAGE | Classification | classification_omniglot | :heavy_check_mark: | A dataset of hand-written characters with 1623 characters and 20 examples for each character |
 | [**Gtzan**](https://paperswithcode.com/dataset/gtzan) | Audio | Classification | classification_gtzan | :heavy_check_mark: | A dataset in Musical genre classification of audio signals |
 
-In addition to the above datasets, we can also find the required datasets from MMF, Torchvision, Torchtext and Torchaudio. MMF, as the main API of our framework, we have all the datasets recorded in the registry and just need to load the key_word of this required dataset by a simple script. word can be run. For the other three APIs, including custom datasets need to create a special Builder and Dataset, and create a key_word of it saved to the registry inside. Of course, all datasets require the configuration file .yaml to provide the required parameters. There will be specific examples in the Usage Section.
+In addition to the above datasets, we can also find the required datasets from MMF, Torchvision, Torchtext and Torchaudio. MMF, as the main API of our framework, we have all the datasets recorded in the registry and just need to load the key_word of this required dataset by a simple script. For the other three APIs, including custom datasets need to create a special Builder and Dataset, and create a key_word private saved into the registry. Of course, all datasets require the configuration file .yaml to provide the required parameters. There will be specific examples in the Usage Section.
 
 ## Usage
 As mentioned in the previous section, all datasets except MMF need to create a key_word and save it in the registry of GAIF framework. For example:
-```
+```python
 @registry.register_builder("classification_yahooanswers")
 class YAHOOANSWERSBuilder(BaseDatasetBuilder): 
 ....
 ```
 Then, the GAIF framework will know that this key_word *classification_yahooanswers* is the class of the corresponding dataset and thus create the relevant object. Also, there is a function *config_path* (custom) in the Builder, which will provide the location of the dataset configuration file.yaml, so that GAIF can find the relevant parameters. Something like this:
-``` 
+``` python
 @classmethod
     def config_path(cls):
         return "configs/datasets/yahooanswers/classification.yaml"
@@ -110,7 +139,7 @@ Then, the GAIF framework will know that this key_word *classification_yahooanswe
 
 ### MMF
   For MMF, it provides a number of datasets that can be used directly, including automatically downloaded data, and are registed in the GAIF framework. We give an example here:
-  ```
+```python
     from mmf.utils.build import build_dataset
     from gaif.utils.env import setup_imports
     from mmf.common.registry import registry
@@ -120,13 +149,14 @@ Then, the GAIF framework will know that this key_word *classification_yahooanswe
     dataset_key = "coco"
     dataset = build_dataset(dataset_key=dataset_key)
     print(dataset.__getitem__(6))
+```
+  The samples of this dataset are obtained directly by calling MMF's Builder and Dataset with the key_word of the MMF dataset. For more informations, please look at this : 
+  - [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
+  - [*MMF_Colab*](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/kdd_tutorial.ipynb#scrollTo=wu5o2DbhHp8M)
   
-  ```
-  The samples of this dataset are obtained directly by calling MMF's Builder and Dataset with the key_word of the MMF dataset. For more informations, please look at this : [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
-
 ### Torchvision
   For the three sisters of the Torch series, we can use the datasets they generate directly, but we have to build Builders and Datasets for them separately, as described in the previous section. Here is an example: 
-  ```
+```python
     ... in Builder:
     
     def load(self, config, dataset, *args, **kwargs):
@@ -156,8 +186,8 @@ Then, the GAIF framework will know that this key_word *classification_yahooanswe
         
     .... 
     
-  ```
-For example, in the example above, Torchvision provides a dataset class for Omniglot. We create the Builder, Dataset and profile.yaml for them separately.  *Notice*: The key_word in the configuration file and the key_word of the dataset should be consistent.
+```
+In the example above, Torchvision provides a dataset class for Omniglot. We need to create the Builder, Dataset and profile.yaml for them separately.  *Notice*: The key_word in the configuration file and the key_word of the dataset should be consistent.
 
 Finally, we can arrange where the datasets are stored by changing the env.data_dir. Generally, the default is to store it in **".cache/torch/mmf/data"**.
 
@@ -168,8 +198,7 @@ Processors are generally used in the GAIF framework to implement various Data Au
 <p>With the GAIF framework's three custom processors: <strong>augly_image_transforms</strong>, <strong>augly_audio_transforms</strong>, <strong>augly_text_transforms</strong> , GAIF can add all transforms function of the augly and the torch series.
 <p>The processors will implement the required Data Augmentation by simply adding the name of the transforms and the required parameters to the config. Here is an example: 
 
-  ```
-    ... in .yaml
+```yaml
     
     dataset_config:
     # You can specify any attributes you want, and you will get them as attributes
@@ -193,11 +222,10 @@ Processors are generally used in the GAIF framework to implement various Data Au
 
 
 
-  ```
+```
 Of course, in addition to Data Augmentation, we can also use some special processors, such as some of MMF's processors or custom processors, or use multiple processors at the same time.
 For example:
-  ```
-    ... in . yaml
+```yaml
     
     dataset_config:
     # You can specify any attributes you want, and you will get them as attributes
@@ -229,16 +257,12 @@ For example:
                     vocab:
                         type: random
                         vocab_file: yahoo_answers_csv/words.txt
-
-
-
-
-  ```
+```
 For more information about MMF's processors and their uses, please click here: [MMF_Processors](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/processors)
 
 If you want to see all valid transforms, We offer two approaches:
   - Use this custom commande to find out it:
-  ```
+  ```sh
     python projects/data_augmentation/run_processors.py
   ```
   ![Transform illustration](./doc/transform_illustration.png)

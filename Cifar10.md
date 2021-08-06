@@ -9,6 +9,8 @@ For a quick presentation of MMF, please check this [notebook](https://colab.rese
 - [Prerequisties](#prerequisties)
 - [Installation](#installation)
 - [How to use](#how-to-use)
+  - [Dataset](#dataset)
+  - [Model](#model)
 - [Dataset](#dataset)
 - [Processor](#processor)
 - [Models](#models)
@@ -31,7 +33,9 @@ pip install .
 
 ## How to use
 For training from scratch vgg16
+### Dataset
 
+### Model
 **Step 1**: create a yaml file *config.yaml* to store the configuration of the training 
 
 ```yaml

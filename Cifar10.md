@@ -6,14 +6,6 @@
 
 GAIF was tested with **Ubuntu 20.04** and python 3.8.10
 
-
-## 2. Install
-
-```sh
-git clone https://github.com/nico-ri/generic-AI-framework
-cd generic-AI-framework
-pip install --editable .
-```
 Here are Requirements for Installing:
 
 ```text
@@ -42,6 +34,13 @@ spacy==3.1.0
 
 ```
 
+## 2. Install
+
+```sh
+git clone https://github.com/nico-ri/generic-AI-framework
+cd generic-AI-framework
+pip install --editable .
+```
 
 ## 3. How to use
 For training from scratch vgg16
@@ -107,7 +106,7 @@ opts = [
 run(opts=opts)
 ```
 
-# Datasets
+## [4.Datasets](./doc/Dataset_README.md)
 Inside our GAIF framework, the dataset part is mainly loaded with various types of data, such as COCO, Yolo, etc., to facilitate the extraction of needed information and tags. And GAIF provides different methods of **Data Augmentation** to make the dataset more complete. Of course, we also provide the function of visualizing the dataset samples to facilitate a more intuitive understanding of this type of data.
 
 A number of datasets have been installed for testing and experience with the GAIF framework, as listed below:
@@ -123,7 +122,7 @@ A number of datasets have been installed for testing and experience with the GAI
 
 In addition to the above datasets, we can also find the required datasets from MMF, Torchvision, Torchtext and Torchaudio. MMF, as the main API of our framework, we have all the datasets recorded in the registry and just need to load the key_word of this required dataset by a simple script. For the other three APIs, including custom datasets need to create a special Builder and Dataset, and create a key_word private saved into the registry. Of course, all datasets require the configuration file .yaml to provide the required parameters. There will be specific examples in the Usage Section.
 
-## Usage
+### Usage
 As mentioned in the previous section, all datasets except MMF need to create a key_word and save it in the registry of GAIF framework. For example:
 ```python
 @registry.register_builder("classification_yahooanswers")
@@ -137,7 +136,7 @@ Then, the GAIF framework will know that this key_word *classification_yahooanswe
         return "configs/datasets/yahooanswers/classification.yaml"
 ```
 
-### MMF
+#### MMF
   For MMF, it provides a number of datasets that can be used directly, including automatically downloaded data, and are registed in the GAIF framework. We give an example here:
 ```python
     from mmf.utils.build import build_dataset
@@ -153,8 +152,8 @@ Then, the GAIF framework will know that this key_word *classification_yahooanswe
   The samples of this dataset are obtained directly by calling MMF's Builder and Dataset with the key_word of the MMF dataset. For more informations, please look at this : 
   - [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
   - [*MMF_Colab*](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/kdd_tutorial.ipynb#scrollTo=wu5o2DbhHp8M)
-  
-### Torchvision
+
+#### Torchvision
   For the three sisters of the Torch series, we can use the datasets they generate directly, but we have to build Builders and Datasets for them separately, as described in the previous section. Here is an example: 
 ```python
     ... in Builder:
@@ -192,7 +191,7 @@ In the example above, Torchvision provides a dataset class for Omniglot. We need
 Finally, we can arrange where the datasets are stored by changing the env.data_dir. Generally, the default is to store it in **".cache/torch/mmf/data"**.
 
 
-# Processors
+## [5.Processors](./doc/Proc_README.md)
 
 Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. But there are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
 <p>With the GAIF framework's three custom processors: <strong>augly_image_transforms</strong>, <strong>augly_audio_transforms</strong>, <strong>augly_text_transforms</strong> , GAIF can add all transforms function of the augly and the torch series.

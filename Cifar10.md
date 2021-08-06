@@ -1,48 +1,35 @@
 # generic-AI-framework (GAIF)
 
-[MMF](https://github.com/facebookresearch/mmf)
+GAIF is an extension of [MMF](https://github.com/facebookresearch/mmf) which brings other models, datasets, optimizer and trainer
+Please check the documentation of [MMF](https://mmf.sh/).
+For a quick presentation of MMF, please check this [notebook](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/mmf_hm_example.ipynb)
 
-## 1. Prerequisties
+<!-- toc -->
 
-GAIF was tested with **Ubuntu 20.04** and python 3.8.10
+- [Prerequisties](#prerequisties)
+- [Installation](#installation)
+- [How to use](#how-to-use)
+- [Dataset](#dataset)
+- [Processor](#processor)
+- [Models](#models)
+- [License](#license)
 
-Here are Requirements for Installing:
+<!-- tocstop -->
 
-```text
-mmf @ git+https://github.com/facebookresearch/mmf@d37fffc
-torch==1.9.0
-torchvision== 0.10.0 
-torchaudio==0.9.0
-pytorch_lightning>=1.3.1
-torchinfo==0.1.1
-einops==0.3.0
-timm>=0.4.9
-efficientnet_pytorch==0.7.1
-tqdm>=4.43.0,<4.50.0
-numpy>=1.16.6
-opencv-python==4.2.0.32
-matplotlib==3.3.4
-wget==3.2
-scikit-learn==0.24.2
-Pillow>=8.2.0
-gdown==3.13.0
-lightly==1.1.15
-ranger21 @ git+https://github.com/lessw2020/Ranger21@57add4c
-augly==0.1.6 
-torchtext==0.5.0
-spacy==3.1.0
 
-```
+## Prerequisties
 
-## 2. Install
+GAIF was tested with **Ubuntu 20.04** and **python 3.8.10**
+
+## Installation
 
 ```sh
 git clone https://github.com/nico-ri/generic-AI-framework
 cd generic-AI-framework
-pip install --editable .
+pip install .
 ```
 
-## 3. How to use
+## How to use
 For training from scratch vgg16
 
 **Step 1**: create a yaml file *config.yaml* to store the configuration of the training 
@@ -53,8 +40,6 @@ dataset: classification_cifar10
 model_config:
   vgg16:
     model: vgg16
-    pretraining: 
-      pretrained : False
     losses: 
       - type: cross_entropy
   
@@ -68,7 +53,7 @@ evaluation:
   metrics:
     - accuracy
 
-# trainer lightning
+# trainer lightning 
 trainer:
   params:
     gpus: 1
@@ -79,11 +64,11 @@ trainer:
     checkpoint_callback: true
 
 training:
-  trainer: lightning
+  trainer: lightning_gaif
   seed: 1
   batch_size: 32
-  max_epochs: 100
-  tensorboard: false
+  max_epochs: 20
+  tensorboard: true
 ```
 
 **Step 2**: Create a python file *train.py* to run the training
@@ -106,191 +91,149 @@ opts = [
 run(opts=opts)
 ```
 
-## [4.Datasets](./doc/Dataset_README.md)
-Inside our GAIF framework, the dataset part is mainly loaded with various types of data, such as COCO, Yolo, etc., to facilitate the extraction of needed information and tags. And GAIF provides different methods of **Data Augmentation** to make the dataset more complete. Of course, we also provide the function of visualizing the dataset samples to facilitate a more intuitive understanding of this type of data.
+## [Dataset](./doc/Dataset_README.md)
+Inside our GAIF framework, the dataset part is mainly loaded with various types of data, such as COCO, Yolo, to facilitate the extraction of information and tags. Generally, all of dataset are stored in this location : **".cache/torch/mmf/data"** by default. 
 
-A number of datasets have been installed for testing and experience with the GAIF framework, as listed below:
-| Name_Dataset | Type | THEME | Key_Word_Registry | Download | Description |
-| ---- | --- | ---- | --- | ---- | ---- |
-| [**YahooAnswers**](https://paperswithcode.com/sota/text-classification-on-yahoo-answers) | TEXT | Classification | classification_yahooanswers | :heavy_check_mark: | A dataset with Question and Answers in 10 Types Topic |
-| [**IMDB**](https://paperswithcode.com/dataset/imdb-movie-reviews) | TEXT | Classification | classification_imdb | :heavy_check_mark: | A dataset with critics positive and negative for movies | 
-| [**Balloon**](https://github.com/matterport/Mask_RCNN) | IMAGE | Detection | detection_balloon | :heavy_check_mark: | A dataset of photos with a lot of balloon to find out |
-| [**Poc_mons**](./doc/Poc_mons.md) | IMAGE | Detection | detection_poc_mons | :x: | A dataset prive of photos in Mons to look for mans and vehicules |
-| [**Cifar10**](https://paperswithcode.com/dataset/cifar-10) | IMAGE | Classification | classification_cifar10 | :heavy_check_mark: | A dataset with 10 differents category objects |
-| [**Omniglot**](https://paperswithcode.com/dataset/omniglot-1) | IMAGE | Classification | classification_omniglot | :heavy_check_mark: | A dataset of hand-written characters with 1623 characters and 20 examples for each character |
-| [**Gtzan**](https://paperswithcode.com/dataset/gtzan) | Audio | Classification | classification_gtzan | :heavy_check_mark: | A dataset in Musical genre classification of audio signals |
+GAIF provides different methods of **Data Augmentation** to make the dataset more robust. Of course, we also provide the function of visualizing the dataset samples to facilitate a more intuitive understanding of this type of data. 
 
-In addition to the above datasets, we can also find the required datasets from MMF, Torchvision, Torchtext and Torchaudio. MMF, as the main API of our framework, we have all the datasets recorded in the registry and just need to load the key_word of this required dataset by a simple script. For the other three APIs, including custom datasets need to create a special Builder and Dataset, and create a key_word private saved into the registry. Of course, all datasets require the configuration file .yaml to provide the required parameters. There will be specific examples in the Usage Section.
+Generally, Dataset consists of three parts: **Builder**, **Datasets**, and configuration file **.yaml**. 
+  - Each Builder will have a key word which is recorded in **Register**. Then GAIF can find the Dataset and configuration files through the Builder
+  - The Dataset is mainly to build a data class, while providing sample output and sample visualization. **Data Augmentation** also happens here.
+  - Each dataset has his own configuration file which provides parameters for **Data Augmentation** realised by Processors, could be override by the config of Model.  
 
-### Usage
-As mentioned in the previous section, all datasets except MMF need to create a key_word and save it in the registry of GAIF framework. For example:
-```python
-@registry.register_builder("classification_yahooanswers")
-class YAHOOANSWERSBuilder(BaseDatasetBuilder): 
-....
-```
-Then, the GAIF framework will know that this key_word *classification_yahooanswers* is the class of the corresponding dataset and thus create the relevant object. Also, there is a function *config_path* (custom) in the Builder, which will provide the location of the dataset configuration file.yaml, so that GAIF can find the relevant parameters. Something like this:
-``` python
-@classmethod
-    def config_path(cls):
-        return "configs/datasets/yahooanswers/classification.yaml"
-```
-
-#### MMF
-  For MMF, it provides a number of datasets that can be used directly, including automatically downloaded data, and are registed in the GAIF framework. We give an example here:
-```python
-    from mmf.utils.build import build_dataset
-    from gaif.utils.env import setup_imports
-    from mmf.common.registry import registry
-    
-    setup_imports()
-
-    dataset_key = "coco"
-    dataset = build_dataset(dataset_key=dataset_key)
-    print(dataset.__getitem__(6))
-```
-  The samples of this dataset are obtained directly by calling MMF's Builder and Dataset with the key_word of the MMF dataset. For more informations, please look at this : 
-  - [*MMF_Dataset*](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/builders)
-  - [*MMF_Colab*](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/kdd_tutorial.ipynb#scrollTo=wu5o2DbhHp8M)
-
-#### Torchvision
-  For the three sisters of the Torch series, we can use the datasets they generate directly, but we have to build Builders and Datasets for them separately, as described in the previous section. Here is an example: 
-```python
-    ... in Builder:
-    
-    def load(self, config, dataset, *args, **kwargs):
-        # Load the dataset using the CIFAR10Dataset class
-        self.dataset = ClassificationOMNIGLOTDataset(
-            config, dataset, data_folder=self.data_folder
-        )
-        return self.dataset
-        
-    ... in Dataset:
-    
-    def _load(self):
-        # Background and Download is optional
-        self.omniglot_dataset = torchvision.datasets.Omniglot(
-            self._data_dir, background=True, download=True
-        )
-    
-    .... in Config.yaml:
-    
-    dataset_config:
-    # You can specify any attributes you want, and you will get them as attributes
-    # inside the config passed to the dataset. Check the Dataset implementation below.
-    classification_yahooanswers:
-        # Where your data is stored
-        data_dir: ${env.data_dir}
-        processors:
-        
-    .... 
-    
-```
-In the example above, Torchvision provides a dataset class for Omniglot. We need to create the Builder, Dataset and profile.yaml for them separately.  *Notice*: The key_word in the configuration file and the key_word of the dataset should be consistent.
-
-Finally, we can arrange where the datasets are stored by changing the env.data_dir. Generally, the default is to store it in **".cache/torch/mmf/data"**.
+Finally, For more details about Dataset, please click on the title of this section. 
 
 
-## [5.Processors](./doc/Proc_README.md)
+## [Processor](./doc/Proc_README.md)
 
 Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. But there are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
-<p>With the GAIF framework's three custom processors: <strong>augly_image_transforms</strong>, <strong>augly_audio_transforms</strong>, <strong>augly_text_transforms</strong> , GAIF can add all transforms function of the augly and the torch series.
-<p>The processors will implement the required Data Augmentation by simply adding the name of the transforms and the required parameters to the config. Here is an example: 
 
-```yaml
-    
-    dataset_config:
-    # You can specify any attributes you want, and you will get them as attributes
-    # inside the config passed to the dataset. Check the Dataset implementation below.
-    classification_cifar10_augly:
-        # Where your data is stored
-        data_dir: ${env.data_dir}
-        processors:
-        # The processors will be assigned to the datasets automatically by GAIF
-        # For example if key is text_processor, you can access that processor inside
-        # dataset object using self.text_processor
-          augly_image_transforms:
-            type: augly_image_transforms
-            params: 
-              transforms:
-                - type: Brightness (Augly)
-                  params: 
-                    factor: 0.5
-                - type: RandomBlur (Augly)
-                - ToTensor (Torchvision)
+Finally, For more details about Processor, please click on the title of this section. 
 
+## Models
+| Name_Model | type | THEME | Key_Word_Registry | Description |
+| ---- | --- | ---- | --- | ---- |
+| [**All models from timm**](https://github.com/rwightman/pytorch-image-models) | Image | Classification | model_timm | A large collection of image models |
+| [**All classification models from torchvision**](https://pytorch.org/vision/stable/models.html) | Image | Classification | model_torchvision |  A large collection of image models | 
+| [**Efficientnet**](https://github.com/lukemelas/EfficientNet-PyTorch) | Image| Classification | efficientnet |Implementation of a Efficientnet by @lukemelas |
+| [**Simclr from lightly**](https://github.com/lightly-ai/lightly)| Image| Self-Supervised Learning| simclr| Implementation of simclr training by [lightly](https://github.com/lightly-ai/lightly)| 
 
-
-```
-Of course, in addition to Data Augmentation, we can also use some special processors, such as some of MMF's processors or custom processors, or use multiple processors at the same time.
-For example:
-```yaml
-    
-    dataset_config:
-    # You can specify any attributes you want, and you will get them as attributes
-    # inside the config passed to the dataset. Check the Dataset implementation below.
-    classification_yahooanswers:
-        # Where your data is stored
-        data_dir: ${env.data_dir}
-        processors:
-        # The processors will be assigned to the datasets automatically by MMF
-        # For example if key is text_processor, you can access that processor inside
-        # dataset object using self.text_processor
-          augly_text_transforms:
-            type: augly_text_transforms
-            params: 
-              transforms:
-                # - type: ReplaceBidirectional
-                #   params: 
-                #       p: 1.0
-                - type: ReplaceSimilarUnicodeChars
-                  params:
-                    aug_word_p: 0.6
-                - type: InsertPunctuationChars
-                  params: 
-                    {}
-          text_processor:
-                type: vocab
-                params:
-                    max_length: 10
-                    vocab:
-                        type: random
-                        vocab_file: yahoo_answers_csv/words.txt
-```
-For more information about MMF's processors and their uses, please click here: [MMF_Processors](https://github.com/facebookresearch/mmf/tree/master/mmf/datasets/processors)
-
-If you want to see all valid transforms, We offer two approaches:
-  - Use this custom commande to find out it:
-  ```sh
-    python projects/data_augmentation/run_processors.py
-  ```
-  ![Transform illustration](./doc/transform_illustration.png)
-  - Or look at these two lien for more informations: [Augly_transforme](https://github.com/facebookresearch/AugLy) and [Torch_transforme](https://pytorch.org/vision/stable/transforms.html)
-  
-For those who wish to learn more about the dataset part of the GAIF framework or have unanswered questions, we have a notebook that shows the process of building a custom dataset from start to finish. Please look at here: [Dataset_Detail](/Dataset_Example.ipynb)
-
-
-## Models and Backbones
 
 * [timm](https://github.com/rwightman/pytorch-image-models)
+Generic class model model_timm to call timm models by specifying in the __model_library__ field the desired architecture (e.g. a resnet 50 of timm)
+```yaml
+model_config:
+  # key of model
+  model_timm:
+    # key of model
+    model: model_timm
+    # name of the architecture in library timm
+    model_library: resnet50 
+    # flag to use pretraining of timm
+    pretrained: false
+    losses:
+      # key of a loss function
+      - type: cross_entropy
+```
 * [torchvision](https://pytorch.org/vision/stable/models.html)
-* [torchaudio](https://pytorch.org/audio/stable/models.html) (not tested yet)
-* [transformers](https://huggingface.co/transformers/main_classes/model.html) (not implemented yet)
-* [EfficientNet](https://github.com/lukemelas/EfficientNet-PyTorch)
-## FPN Backbones 
+Generic class model model_torchvision to call timm models by specifying in the __model_library__ field the desired architecture (e.g. a resnet 50 of timm)
+```yaml
+model_config:
+  # key of model
+  model_torchvision:
+    # key of model
+    model: model_torchvision
+    # name of the architecture in library torchvision
+    model_library: resnet50 
+    # flag to use pretraining of torchvision
+    pretrained: false
+    losses:
+      # key (from gaif or mmf) of a loss function
+      - type: cross_entropy
+```
+* [torchaudio](https://pytorch.org/audio/stable/models.html)
 
 ## Weights
 * [CIFAR-10/CIFAR-100](https://github.com/chenyaofo/pytorch-cifar-models) (supervised)
 * [Places 365](https://github.com/CSAILVision/places365) (supervised)
 * [lightly](https://github.com/lightly-ai/lightly) (self-supervised) (Not implemented yet)
 
+Note: If you create a custom model, you can create your own fields for the configuration file. Otherwise, you have to check the documentation of the gaif/mmf model to get to check the fields to be filled in.
 
+__Tutoriels from MMF__:
+
+* [How to add a custom model ?](https://mmf.sh/docs/tutorials/concat_bert_tutorial)
+* [How to use pretrained weighs ?](https://mmf.sh/docs/tutorials/checkpointing)
+# Backbones/Encoders
+
+We have added to the encoders of mmf the encoders of timm
+
+| Name_Backbone | type | Key_Word_Registry | Description |
+| ---- | --- | ---- | --- | 
+| [**All encoders from timm**](https://github.com/rwightman/pytorch-image-models) | Image | timm_encoder | A large collection of image models which can be used as encoders |
+
+Config of a timm_encoder:
+```yaml
+type: timm_encoder 
+params:
+  model_library: resnet18
+  pretrained: false 
+  # set fpn to true to get a FPN 
+  fpn: False
+  # set forward_features to true to get the embeddings
+  forward_features: true
+
+  # To change the tensor shape of the ouput like this Batch_sizex2048x7x7 -> Batch_sizexnum_output_featuresx2048
+  ppol: true
+  pool_type: avg # avg or max 
+  num_output_features: 1
+
+  # Specify the path of the pre-training weights file if needed, otherwise put the value null
+  pretrained_model: PATH_TO/pretrained_weights.pth 
+  freeze:
+    use_freeze: true 
+    # layers to freeze have to be declared in a list (e.g: [5,6,7]), -1 value will freeze the whole backbone
+    layers_to_freeze: -1
+
+```
+
+Notes: FPN is not available to all timm encoders (if FPN is set to true, a NotImplementedError whill be raised)
+# Self-Supervised training
+Self-supervised learning in GAIF is based on [lightly](https://github.com/lightly-ai/lightly)
+
+For instance with simclr:
+```yaml
+simclr:
+   model: simclr
+   num_ftrs: 512
+   losses:
+     - type: NTXentLoss
+       params: 
+         temperature: 0.5
+   
+   image_encoder:
+     type: timm_encoder 
+     params:
+       model_library: resnet18
+       pretrained: false 
+       fpn: False
+       forward_features: true
+       pool_type: avg
+       num_output_features: 1
+       pretrained_model: weights/resnet18_simclr_lighlty.pth
+      freeze:
+        use_freeze: true 
+        layers_to_freeze: -1
+```
 ## Trainer
 
-The trainer in GAIF is based on the trainer of pytorch-lightning 
+GAIF proposes a new trainer lightning_gaif which is based on the trainer lightning of mmf with new features (model summary with torchinfo, inference,...)
 
-* self-supervised : [lightly](https://github.com/lightly-ai/lightly)
-* distillation: 
+| Name_Trainer | type| Key_Word_Registry | Description |
+| ---- | --- | ---- | --- | 
+| GAIF_lightning_trainer | pytorch_lightning | lightning_gaif | GAIF proposes a new trainer lightning_gaif which is based on the trainer lightning of mmf with new features (model summary with torchinfo, inference,...) |
+
+
 
 Extensions like deepspeed will be available.
 

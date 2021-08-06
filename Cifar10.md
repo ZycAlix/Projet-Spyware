@@ -34,6 +34,48 @@ pip install .
 ## How to use
 For training from scratch vgg16
 ### Dataset Step
+**Step 1**: create a yaml file *config.yaml* to store the configuration for dataset you want to use
+```yaml
+dataset_config:
+    classification_cifar10:
+        # Where your data is stored
+        data_dir: ${env.data_dir}
+        method: sup
+        processors:
+          augly_image_transforms:
+            type: augly_image_transforms
+            params:
+              transforms:
+                - type: RandomCrop
+                  params:
+                    size: [32, 32] 
+                    padding: 4
+                - type: Resize
+                  params:
+                    size: [224,224]
+                - ToTensor
+                - RandomHorizontalFlip
+                - type: Normalize
+                  params:
+                    mean: [0.4914, 0.4822,  0.4465]
+                    std: [0.2023, 0.1994, 0.2010]
+```
+**Step 2**: create a python file *build_cifar10.py* to have a sample of this dataset and his visualisation.
+```python
+from gaif.utils.build import build_dataset
+from gaif.utils.env import setup_imports
+
+
+if __name__ == "__main__":
+
+    setup_imports()
+
+    dataset_key = "classification_cifar10"
+    dataset = build_dataset(dataset_key=dataset_key)
+    print(dataset.__getitem__(6))
+```
+
+
 
 ### Model Step
 **Step 1**: create a yaml file *config.yaml* to store the configuration of the training 
@@ -105,14 +147,17 @@ Generally, Dataset consists of three parts: **Builder**, **Datasets**, and confi
   - The Dataset is mainly to build a data class, while providing sample output and sample visualization. **Data Augmentation** also happens here.
   - Each dataset has his own configuration file which provides parameters for **Data Augmentation** realised by Processors, could be override by the config of Model.  
 
-Finally, For more details about Dataset, please click on the title of this section. 
+*Finally, For more details about Dataset, please click on the title of this section.* 
 
 
 ## [Processor](./doc/Proc_README.md)
 
-Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. But there are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
 
-Finally, For more details about Processor, please click on the title of this section. 
+Processors can be thought of as **transforms** which transform a sample into a form usable by the model. Each processor takes in a dictionary and returns a dictionary. Processors are initialized as member variables of the dataset and can be used to preprocess samples in the proper format.
+
+Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. There are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
+
+*Finally, For more details about Processor, please click on the title of this section.*
 
 ## Models
 | Name_Model | type | THEME | Key_Word_Registry | Description |

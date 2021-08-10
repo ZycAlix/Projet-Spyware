@@ -1,29 +1,26 @@
 # generic-AI-framework (GAIF)
 
-GAIF is an extension of [MMF](https://github.com/facebookresearch/mmf) which brings other models, datasets, optimizer and trainer
-Please check the documentation of [MMF](https://mmf.sh/).
-For a quick presentation of MMF, please check this [notebook](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/mmf_hm_example.ipynb)
+GAIF is an extension of [MMF](https://github.com/facebookresearch/mmf) which brings other models, datasets, optimizer and trainer.
+
+GAIF brings more vision models, diversifies training techniques (self-supervised learning, distillation, ...) by incorporating api from other frameworks.
+
+Please check the documentation of [MMto add GAIF functionality to MMFF](https://mmf.sh/).
 
 <!-- toc -->
 
 - [Prerequisties](#prerequisties)
 - [Installation](#installation)
 - [How to use](#how-to-use)
-  - [Dataset Step](#dataset-step)
-  - [Model Step](#model-step)
-- [Dataset](#dataset)
-- [Processor](#processor)
+- [How to visualize dataset](#how-to-visualize-dataset)
+- [How to use processor](#how-to-use-processor)
 - [Models](#models)
 - [License](#license)
 
 <!-- tocstop -->
 
-
-## Prerequisties
+## Installation
 
 GAIF was tested with **Ubuntu 20.04** and **python 3.8.10**
-
-## Installation
 
 ```sh
 git clone https://github.com/nico-ri/generic-AI-framework
@@ -32,35 +29,20 @@ pip install .
 ```
 
 ## How to use
-For training from scratch vgg16
-### Dataset Step
-**Step 1**: create a yaml file *config.yaml* to store the configuration for dataset you want to use
-```yaml
-dataset_config:
-    classification_cifar10:
-        # Where your data is stored
-        data_dir: ${env.data_dir}
-        method: sup
-        processors:
-          augly_image_transforms:
-            type: augly_image_transforms
-            params:
-              transforms:
-                - type: RandomCrop
-                  params:
-                    size: [32, 32] 
-                    padding: 4
-                - type: Resize
-                  params:
-                    size: [224,224]
-                - ToTensor
-                - RandomHorizontalFlip
-                - type: Normalize
-                  params:
-                    mean: [0.4914, 0.4822,  0.4465]
-                    std: [0.2023, 0.1994, 0.2010]
+
+GAIF use the core of MMF to operate. Please check this [notebook](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/mmf_hm_example.ipynb) to have a quick introduction of MMF.
+
+GAIF bring new models, datasets, optimizers, trainers, processors which can be called directely by MMF API. You have just to add this two following lines in you main.py to launch mmf training to to add GAIF functionality to MMF:
+
+```python
+from gaif.utils.env import setup_imports
+
+setup_imports()
 ```
-**Step 2**: create a python file *build_cifar10.py* to have a sample of this dataset and his visualisation.
+
+## How to visualize dataset
+
+GAIF has scripts for some datasets, which can be viewed by running the following code directly:
 ```python
 from gaif.utils.build import build_dataset
 from gaif.utils.env import setup_imports
@@ -73,91 +55,40 @@ if __name__ == "__main__":
     dataset_key = "classification_cifar10"
     dataset = build_dataset(dataset_key=dataset_key)
     print(dataset.__getitem__(6))
+
 ```
 
+*Finally, For more details about Dataset, please click [here](./doc/Dataset_README.md).* 
 
+## How to use processor
 
-### Model Step
-**Step 1**: create a yaml file *config.yaml* to store the configuration of the training 
-
-```yaml
-dataset: classification_cifar10
-
-model_config:
-  vgg16:
-    model: vgg16
-    losses: 
-      - type: cross_entropy
-  
-optimizer:
-  type: Adam
-  params:
-    lr: 1e-3
-    weight_decay: 1e-5
-
-evaluation:
-  metrics:
-    - accuracy
-
-# trainer lightning 
-trainer:
-  params:
-    gpus: 1
-    max_epochs: 100
-    logger: true
-    progress_bar_refresh_rate: 1
-    val_check_interval: 100
-    checkpoint_callback: true
-
-training:
-  trainer: lightning_gaif
-  seed: 1
-  batch_size: 32
-  max_epochs: 20
-  tensorboard: true
-```
-
-**Step 2**: Create a python file *train.py* to run the training
+For GAIF, If you wish to use a processor to process the data, this is an example: 
 
 ```python
-from mmf_cli.run import run
-from mmf.common.registry import registry
-from gaif.utils.env import setup_imports
-
-setup_imports()
-
-registry.mapping["state"] = {}
-
-opts = [
-    "config='PATH_TO/config.yaml'",
-    "model=vgg16",
-    "dataset=classification_cifar10",
-]
-
-run(opts=opts)
+transform_out = self.augly_image_transforms({"image": img})
+img = transform_out["image"]
 ```
+Here is config file: 
+```yaml
+dataset_config:
+    # You can specify any attributes you want, and you will get them as attributes
+    # inside the config passed to the dataset. Check the Dataset implementation below.
+    classification_raf_basic:
+        # Where your data is stored
+        data_dir: ${env.data_dir}
+        method: svp
+        processors:
+        # The processors will be assigned to the datasets automatically by GAIF
+        # For example if key is text_processor, you can access that processor inside
+        # dataset object using self.text_processor
+          augly_image_transforms:
+            type: augly_image_transforms
+            params:
+              transforms:
+                - ToTensor
+```
+*Finally, For more details about Processor, please click [here](./doc/Proc_README.md).*
 
-## [Dataset](./doc/Dataset_README.md)
-Inside our GAIF framework, the dataset part is mainly loaded with various types of data, such as COCO, Yolo, to facilitate the extraction of information and tags. Generally, all of dataset are stored in this location : **".cache/torch/mmf/data"** by default. 
-
-GAIF provides different methods of **Data Augmentation** to make the dataset more robust. Of course, we also provide the function of visualizing the dataset samples to facilitate a more intuitive understanding of this type of data. 
-
-Generally, Dataset consists of three parts: **Builder**, **Datasets**, and configuration file **.yaml**. 
-  - Each Builder will have a key word which is recorded in **Register**. Then GAIF can find the Dataset and configuration files through the Builder
-  - The Dataset is mainly to build a data class, while providing sample output and sample visualization. **Data Augmentation** also happens here.
-  - Each dataset has his own configuration file which provides parameters for **Data Augmentation** realised by Processors, could be override by the config of Model.  
-
-*Finally, For more details about Dataset, please click on the title of this section.* 
-
-
-## [Processor](./doc/Proc_README.md)
-
-
-Processors can be thought of as **transforms** which transform a sample into a form usable by the model. Each processor takes in a dictionary and returns a dictionary. Processors are initialized as member variables of the dataset and can be used to preprocess samples in the proper format.
-
-Processors are generally used in the GAIF framework to implement various Data Augmentation and to tersorize data from datasets. There are also some special Processor, such as TextProcessor, can be used to tokenize text data and build vocab dictionary. 
-
-*Finally, For more details about Processor, please click on the title of this section.*
 
 ## Models
 | Name_Model | type | THEME | Key_Word_Registry | Description |
@@ -200,12 +131,12 @@ model_config:
       # key (from gaif or mmf) of a loss function
       - type: cross_entropy
 ```
-* [torchaudio](https://pytorch.org/audio/stable/models.html)
 
-## Weights
+
+### Weights
 * [CIFAR-10/CIFAR-100](https://github.com/chenyaofo/pytorch-cifar-models) (supervised)
 * [Places 365](https://github.com/CSAILVision/places365) (supervised)
-* [lightly](https://github.com/lightly-ai/lightly) (self-supervised) (Not implemented yet)
+* [lightly](https://github.com/lightly-ai/lightly) (self-supervised) 
 
 Note: If you create a custom model, you can create your own fields for the configuration file. Otherwise, you have to check the documentation of the gaif/mmf model to get to check the fields to be filled in.
 
@@ -246,9 +177,12 @@ params:
 
 ```
 
-Notes: FPN is not available to all timm encoders (if FPN is set to true, a NotImplementedError whill be raised)
+Notes: FPN is not available to all timm encoders (if FPN is set to true, a NotImplementedError will be raised) (please check the documenation of [timm](https://rwightman.github.io/pytorch-image-models/feature_extraction/))
+
 # Self-Supervised training
 Self-supervised learning in GAIF is based on [lightly](https://github.com/lightly-ai/lightly)
+
+
 
 For instance with simclr:
 ```yaml
@@ -282,11 +216,13 @@ GAIF proposes a new trainer lightning_gaif which is based on the trainer lightni
 | ---- | --- | ---- | --- | 
 | GAIF_lightning_trainer | pytorch_lightning | lightning_gaif | GAIF proposes a new trainer lightning_gaif which is based on the trainer lightning of mmf with new features (model summary with torchinfo, inference,...) |
 
+## For Developpers
+Please note that we patch some modules of MMF to merge features of GAIF with MMF API: 
+* [batch_collator](./gaif/common/patches_batch_collator.py)
+* [registry](./gaif/common/patches_batch_collator.py)
 
 
-Extensions like deepspeed will be available.
-
-## License
+## Licenseo
 ## Citations
 GAIF use API of 
 * models:

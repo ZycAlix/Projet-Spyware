@@ -1,14 +1,14 @@
-# generic-AI-framework (GAIF)
+# Generic AI Framework (GAIF)
 
-GAIF is an extension of [MMF](https://github.com/facebookresearch/mmf) which brings other models, datasets, optimizer and trainer.
+GAIF is an extension of [MMF](https://github.com/facebookresearch/mmf) which brings additional models, datasets, optimizers and trainers
 
 GAIF brings more vision models, diversifies training techniques (self-supervised learning, distillation, ...) by incorporating api from other frameworks.
 
-Please check the documentation of [MMto add GAIF functionality to MMFF](https://mmf.sh/).
+Please check the documentation of [MMF](https://mmf.sh/).
+For a quick introduction to MMF, please check this [notebook](https://colab.research.google.com/github/facebookresearch/mmf/blob/notebooks/notebooks/mmf_hm_example.ipynb)
 
 <!-- toc -->
 
-- [Prerequisties](#prerequisties)
 - [Installation](#installation)
 - [How to use](#how-to-use)
 - [How to visualize dataset](#how-to-visualize-dataset)
@@ -38,6 +38,16 @@ GAIF bring new models, datasets, optimizers, trainers, processors which can be c
 from gaif.utils.env import setup_imports
 
 setup_imports()
+
+registry.mapping["state"] = {}
+
+opts = [
+    "config='PATH_TO/config.yaml'",
+    "model=vgg16", 
+    "dataset=classification_cifar10",
+]
+
+run(opts=opts)
 ```
 
 ## How to visualize dataset
@@ -92,99 +102,34 @@ dataset_config:
 
 ## Models
 | Name_Model | type | THEME | Key_Word_Registry | Description |
+=======
+# Models (for supervised and self-supervised learning)
+| Name Model | Type | Theme | Key Word Registry | Description |
+>>>>>>> 0085f6dc490202d9db226aec992dadeb66620ef8
 | ---- | --- | ---- | --- | ---- |
 | [**All models from timm**](https://github.com/rwightman/pytorch-image-models) | Image | Classification | model_timm | A large collection of image models |
 | [**All classification models from torchvision**](https://pytorch.org/vision/stable/models.html) | Image | Classification | model_torchvision |  A large collection of image models | 
 | [**Efficientnet**](https://github.com/lukemelas/EfficientNet-PyTorch) | Image| Classification | efficientnet |Implementation of a Efficientnet by @lukemelas |
 | [**Simclr from lightly**](https://github.com/lightly-ai/lightly)| Image| Self-Supervised Learning| simclr| Implementation of simclr training by [lightly](https://github.com/lightly-ai/lightly)| 
 
+[More details and how to use these models](./gaif/models/README.md)
 
-* [timm](https://github.com/rwightman/pytorch-image-models)
-Generic class model model_timm to call timm models by specifying in the __model_library__ field the desired architecture (e.g. a resnet 50 of timm)
-```yaml
-model_config:
-  # key of model
-  model_timm:
-    # key of model
-    model: model_timm
-    # name of the architecture in library timm
-    model_library: resnet50 
-    # flag to use pretraining of timm
-    pretrained: false
-    losses:
-      # key of a loss function
-      - type: cross_entropy
-```
-* [torchvision](https://pytorch.org/vision/stable/models.html)
-Generic class model model_torchvision to call timm models by specifying in the __model_library__ field the desired architecture (e.g. a resnet 50 of timm)
-```yaml
-model_config:
-  # key of model
-  model_torchvision:
-    # key of model
-    model: model_torchvision
-    # name of the architecture in library torchvision
-    model_library: resnet50 
-    # flag to use pretraining of torchvision
-    pretrained: false
-    losses:
-      # key (from gaif or mmf) of a loss function
-      - type: cross_entropy
-```
-
-
-### Weights
-* [CIFAR-10/CIFAR-100](https://github.com/chenyaofo/pytorch-cifar-models) (supervised)
-* [Places 365](https://github.com/CSAILVision/places365) (supervised)
-* [lightly](https://github.com/lightly-ai/lightly) (self-supervised) 
-
-Note: If you create a custom model, you can create your own fields for the configuration file. Otherwise, you have to check the documentation of the gaif/mmf model to get to check the fields to be filled in.
-
-__Tutoriels from MMF__:
-
-* [How to add a custom model ?](https://mmf.sh/docs/tutorials/concat_bert_tutorial)
-* [How to use pretrained weighs ?](https://mmf.sh/docs/tutorials/checkpointing)
-# Backbones/Encoders
+# Encoders
 
 We have added to the encoders of mmf the encoders of timm
 
-| Name_Backbone | type | Key_Word_Registry | Description |
+| Name_ENcoder | type | Key_Word_Registry | Description |
 | ---- | --- | ---- | --- | 
 | [**All encoders from timm**](https://github.com/rwightman/pytorch-image-models) | Image | timm_encoder | A large collection of image models which can be used as encoders |
 
-Config of a timm_encoder:
-```yaml
-type: timm_encoder 
-params:
-  model_library: resnet18
-  pretrained: false 
-  # set fpn to true to get a FPN 
-  fpn: False
-  # set forward_features to true to get the embeddings
-  forward_features: true
-
-  # To change the tensor shape of the ouput like this Batch_sizex2048x7x7 -> Batch_sizexnum_output_featuresx2048
-  ppol: true
-  pool_type: avg # avg or max 
-  num_output_features: 1
-
-  # Specify the path of the pre-training weights file if needed, otherwise put the value null
-  pretrained_model: PATH_TO/pretrained_weights.pth 
-  freeze:
-    use_freeze: true 
-    # layers to freeze have to be declared in a list (e.g: [5,6,7]), -1 value will freeze the whole backbone
-    layers_to_freeze: -1
-
-```
-
-Notes: FPN is not available to all timm encoders (if FPN is set to true, a NotImplementedError will be raised) (please check the documenation of [timm](https://rwightman.github.io/pytorch-image-models/feature_extraction/))
+[More details and how to use these encoders](./gaif/modules/README.md)
 
 # Self-Supervised training
 Self-supervised learning in GAIF is based on [lightly](https://github.com/lightly-ai/lightly)
 
+We use lightly models (simclr, byol,...) which will wrap an encoder of MMF/GAIF to be train with Self-SUpervised Learning
 
-
-For instance with simclr:
+For instance to training an encoder resnet 18 (from timm_encoder) with simclr:
 ```yaml
 simclr:
    model: simclr
@@ -193,7 +138,8 @@ simclr:
      - type: NTXentLoss
        params: 
          temperature: 0.5
-   
+
+   # encoder
    image_encoder:
      type: timm_encoder 
      params:
@@ -203,10 +149,10 @@ simclr:
        forward_features: true
        pool_type: avg
        num_output_features: 1
-       pretrained_model: weights/resnet18_simclr_lighlty.pth
+       pretrained_model: PATH_TO/weights.pth
       freeze:
-        use_freeze: true 
-        layers_to_freeze: -1
+        use_freeze: false 
+        layers_to_freeze: null
 ```
 ## Trainer
 
@@ -216,13 +162,79 @@ GAIF proposes a new trainer lightning_gaif which is based on the trainer lightni
 | ---- | --- | ---- | --- | 
 | GAIF_lightning_trainer | pytorch_lightning | lightning_gaif | GAIF proposes a new trainer lightning_gaif which is based on the trainer lightning of mmf with new features (model summary with torchinfo, inference,...) |
 
+## Examples
+###Training from scratch a model 
+
+For training from scratch vgg16
+
+**Step 1**: create a yaml file *config.yaml* to store the configuration of the training 
+
+```yaml
+dataset: classification_cifar10
+
+model_config:
+  vgg16:
+    model: vgg16
+    losses: 
+      - type: cross_entropy
+  
+optimizer:
+  type: Adam
+  params:
+    lr: 1e-3
+    weight_decay: 1e-5
+
+evaluation:
+  metrics:
+    - accuracy
+
+# trainer lightning
+trainer:
+  params:
+    gpus: 1
+    max_epochs: 100
+    logger: true
+    progress_bar_refresh_rate: 1
+    val_check_interval: 100
+    checkpoint_callback: true
+
+training:
+  trainer: lightning # key of the trainer 
+  seed: 1
+  batch_size: 32
+  max_epochs: 100
+  tensorboard: false
+```
+
+**Step 2**: Create a python file *train.py* to run the training
+
+```python
+from mmf_cli.run import run
+from mmf.common.registry import registry
+from gaif.utils.env import setup_imports
+
+setup_imports()
+
+registry.mapping["state"] = {}
+
+opts = [
+    "config='PATH_TO/config.yaml'",
+    "model=vgg16",
+    "dataset=classification_cifar10",
+]
+
+run(opts=opts)
+```
 ## For Developpers
 Please note that we patch some modules of MMF to merge features of GAIF with MMF API: 
-* [batch_collator](./gaif/common/patches_batch_collator.py)
-* [registry](./gaif/common/patches_batch_collator.py)
+* [batch_collator](./gaif/common/patches/patch_batch_collator.py)
+* [registry](./gaif/common/patches/patch_batch_collator.py)
+* [base_model](./gaif/models/patches/patch_base_model.py)
+* [encoder](./gaif/modules/patch_encoder.py)
+* [logger](./gaif/utils/patches/patch_logger.py)
+* [mmf_cli](./gaif_cli/patches/patch_cli.py)
 
-
-## Licenseo
+## License
 ## Citations
 GAIF use API of 
 * models:

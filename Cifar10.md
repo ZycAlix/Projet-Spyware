@@ -11,7 +11,7 @@ For a quick introduction to MMF, please check this [notebook](https://colab.rese
 
 - [Installation](#installation)
 - [How to use](#how-to-use)
-- [How to visualize dataset](#how-to-visualize-dataset)
+- [How to sampling dataset](#how-to-sampling-dataset)
 - [How to use processor](#how-to-use-processor)
 - [Models](#models)
 - [License](#license)
@@ -50,9 +50,14 @@ opts = [
 run(opts=opts)
 ```
 
-## How to visualize dataset
+## How to sampling dataset
 
-GAIF has scripts for some datasets, which can be viewed by running the following code directly:
+Inside our GAIF framework, the dataset part is mainly loaded with various types of data annotation, such as COCO, YOLO, to facilitate the extraction of information and tags. Generally, all of dataset are stored in this location : **".cache/torch/mmf/data"** by default. 
+
+GAIF has scripts for some datasets to get a sample of dataset implemented.  
+
+It calls the function *setup_imports* whici will first check if imports are already setup and all modules are loaded so that they register with registry. Then, with initializing the instance of dataset by its key, we'll get the sample of dataset wished after calling its function  \_\_*getitem*\_\_. For example:
+    
 ```python
 from gaif.utils.build import build_dataset
 from gaif.utils.env import setup_imports
@@ -68,29 +73,31 @@ if __name__ == "__main__":
 
 ```
 
+GAIF provides different methods of **Data Augmentation** to make the dataset more robust. Of course, we also provide the function of viewing the dataset samples to facilitate a more intuitive understanding of this type of data. 
+
 *Finally, For more details about Dataset, please click [here](./doc/Dataset_README.md).* 
 
 ## How to use processor
 
+Processors can be thought of as **transforms** which transform a sample into a form usable by the model. Each processor takes in a dictionary and returns a dictionary. Processors are initialized as member variables of the dataset and can be used to preprocess samples in the proper format.
+
 For GAIF, If you wish to use a processor to process the data, this is an example: 
+First we call our processor *augly_image_transforms* with an instance of image(*here:img*) at format **Tensor**, depending on configuration file will return another image instance processed with different **Data Augmentation**.
 
 ```python
 transform_out = self.augly_image_transforms({"image": img})
 img = transform_out["image"]
 ```
-Here is config file: 
+Look at the config file: 
+It will show the key(*classification_raf_basic*), the location stored of dataset and its processors which will be assigned to the datasets automatically by GAIF. According to these transforms' method selected, belonging to this processor, GAIF will process the data.
+
 ```yaml
 dataset_config:
-    # You can specify any attributes you want, and you will get them as attributes
-    # inside the config passed to the dataset. Check the Dataset implementation below.
     classification_raf_basic:
         # Where your data is stored
         data_dir: ${env.data_dir}
         method: svp
         processors:
-        # The processors will be assigned to the datasets automatically by GAIF
-        # For example if key is text_processor, you can access that processor inside
-        # dataset object using self.text_processor
           augly_image_transforms:
             type: augly_image_transforms
             params:
